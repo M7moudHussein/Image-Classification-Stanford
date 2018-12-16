@@ -100,7 +100,7 @@ def svm_loss_vectorized(W, X, y, reg):
   binary_mask[margin > 0] = 1
   binary_mask[range(len(binary_mask)), y] = -np.sum(binary_mask, axis=1).T
   dW = X.T.dot(binary_mask) / len(X)
-  print(binary_mask.shape)
+#   print(binary_mask.shape)
   dW += 2 * reg * W
   #############################################################################
   #                             END OF YOUR CODE                              #
