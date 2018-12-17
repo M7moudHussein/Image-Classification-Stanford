@@ -10,6 +10,8 @@ class TwoLayerNet(object):
   We train the network with a softmax loss function and L2 regularization on the
   weight matrices. The network uses a ReLU nonlinearity after the first fully
   connected layer.
+  
+  https://stats.stackexchange.com/questions/126238/what-are-the-advantages-of-relu-over-sigmoid-function-in-deep-neural-networks
 
   In other words, the network has the following architecture:
 
@@ -71,11 +73,19 @@ class TwoLayerNet(object):
     # Compute the forward pass
     scores = None
     #############################################################################
-    # TODO: Perform the forward pass, computing the class scores for the input. #
-    # Store the result in the scores variable, which should be an array of      #
-    # shape (N, C).                                                             #
+    # Perform the forward pass, computing the class scores for the input. Store #
+    # the result in the scores variable, which should be an array of shape      #
+    # (N, C).                                                                   #
     #############################################################################
-    pass
+    H = b1.shape[0]
+    C = b2.shape[0]
+    
+    Z1 =  np.dot(X, W1) + b1
+    A1 = np.maximum(0, Z1)
+    Z2 = np.dot(A1, W2) + b2
+    A2 = Z2
+    scores = Z2 
+    
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -87,12 +97,30 @@ class TwoLayerNet(object):
     # Compute the loss
     loss = None
     #############################################################################
-    # TODO: Finish the forward pass, and compute the loss. This should include  #
-    # both the data loss and L2 regularization for W1 and W2. Store the result  #
-    # in the variable loss, which should be a scalar. Use the Softmax           #
-    # classifier loss.                                                          #
+    # Finish the forward pass, and compute the loss. This should include both   #
+    # the data loss and L2 regularization for W1 and W2. Store the result in    #
+    # the variable loss, which should be a scalar. Use the Softmax classifier   #
+    # loss.                                                                     #
     #############################################################################
-    pass
+     
+    # mean of Li.
+    # Li = - log the class which corresponds to one in the true classified
+    exp_scores = np.exp(scores)
+    data_loss = 0.0
+    
+    cost_matrix = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+    
+    data_loss = 0
+    for n in range(0, N):
+        data_loss += -np.log(cost_matrix[n][y[n]])
+    
+    data_loss = data_loss / N
+                             
+    regulatization_loss = reg * np.sum(np.multiply(W1, W1)) + reg * np.sum(np.multiply(W2, W2))
+    
+    loss = data_loss + regulatization_loss
+        
+    
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -100,11 +128,24 @@ class TwoLayerNet(object):
     # Backward pass: compute gradients
     grads = {}
     #############################################################################
-    # TODO: Compute the backward pass, computing the derivatives of the weights #
-    # and biases. Store the results in the grads dictionary. For example,       #
+    # Compute the backward pass, computing the derivatives of the weights and   #
+    # biases. Store the results in the grads dictionary. For example,           #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+        
+    dz2 = cost_matrix.copy()
+    dz2[np.arange(N), y] -= 1
+    dw2 = np.dot(np.transpose(A1), dz2) / N
+    db2 = np.sum(dz2, axis=0) / N
+
+    dz1 = np.dot(dz2, np.transpose(W2)) * np.heaviside(A1, 0)    
+    dw1 = np.dot(np.transpose(X), dz1) / N
+    db1 = np.sum(dz1, axis=0) / N
+    
+    grads['W2'] = dw2 + reg * W2
+    grads['b2'] = db2
+    grads['W1'] = dw1 + reg * W1
+    grads['b1'] = db1
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
